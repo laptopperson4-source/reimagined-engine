@@ -2,7 +2,7 @@
 // SCRAPPIE WORKER
 // A thin CORS relay for Scrappie's two calls that browsers can't
 // make directly: AI post-scoring (Groq, with a multi-model fallback
-// chain) and email enrichment (Findymail / Prospeo).
+// chain) and email enrichment (Prospeo).
 //
 // IMPORTANT: This worker holds NO secrets of its own. Every request
 // carries the API key you already saved in Scrappie's Settings page.
@@ -140,43 +140,9 @@ async function handleEmail(request) {
   if (!apiKey) return json({ email: null, error: "Missing apiKey" });
   if (!service) return json({ email: null, error: "Missing service" });
 
-  if (service === "findymail") return handleFindymail({ firstName, lastName, company, linkedinUrl, apiKey });
   if (service === "prospeo") return handleProspeo({ firstName, lastName, company, linkedinUrl, apiKey });
 
   return json({ email: null, error: "Unknown service: " + service });
-}
-
-// Findymail — https://app.findymail.com/api/search/business-profile (linkedin_url)
-// or https://app.findymail.com/api/search/name (name + domain)
-async function handleFindymail({ firstName, lastName, company, linkedinUrl, apiKey }) {
-  const headers = {
-    Authorization: `Bearer ${apiKey}`,
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  };
-
-  let r;
-  if (linkedinUrl && linkedinUrl !== "#") {
-    r = await fetch("https://app.findymail.com/api/search/business-profile", {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ linkedin_url: linkedinUrl }),
-    });
-  } else if (company) {
-    r = await fetch("https://app.findymail.com/api/search/name", {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ name: `${firstName || ""} ${lastName || ""}`.trim(), domain: company }),
-    });
-  } else {
-    return json({ email: null });
-  }
-
-  if (!r.ok) return json({ email: null });
-  const d = await r.json();
-  const email = d.contact?.email || d.email || null;
-  if (!email) return json({ email: null });
-  return json({ email, confidence: 80 });
 }
 
 // Prospeo — https://api.prospeo.io/enrich-person
