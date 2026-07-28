@@ -67,7 +67,21 @@ async function handleScore(request) {
   if (!postText) return json({ error: "Missing postText" }, 400);
   if (!apiKey) return json({ error: "Missing apiKey" }, 400);
 
-  const prompt = `You are a B2B sales lead qualifier. Read this LinkedIn post and judge how likely the author is a warm lead looking to hire someone to build custom software, an app, automation, or a similar tech solution.
+  const prompt = `You are a strict B2B sales lead qualifier. Read this LinkedIn post and judge whether the AUTHOR is currently looking to hire/pay someone to build them custom software, an app, automation, or a similar tech solution for their own business.
+
+Score LOW (0-30) if the post is just:
+- General commentary, opinions, or news about tech/AI/software topics
+- The author announcing, launching, or promoting their OWN product, tool, or SaaS
+- A developer/founder sharing what they built, learned, or shipped
+- Thought leadership, listicles, "hot takes", or industry trend discussion
+- Case studies or success stories that don't ask for anything
+- Job postings for the author's own company hiring an in-house employee (not a contractor/agency)
+
+Score MEDIUM (31-69) only if there's an ambiguous or soft signal, e.g. the author is exploring options, comparing tools, or hints at a future project without a clear ask.
+
+Score HIGH (70-100) only if the author explicitly signals unmet need and buying/hiring intent for THEIR OWN business — e.g. asking for recommendations for a developer/agency, saying they need something built, describing a problem they want automated/solved and inviting outreach, or asking who can help.
+
+Mentioning words like "SaaS", "API", "automation", "dashboard", "CRM", or "workflow" is NOT by itself a signal of buying intent — most such posts are just talking about tech, not seeking a vendor. Judge intent, not vocabulary.
 
 Post:
 """${String(postText).slice(0, 2000)}"""
