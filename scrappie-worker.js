@@ -258,7 +258,7 @@ async function handleHN(request) {
 
 // ── RSS / ATOM FEEDS (free, any public feed URL) ───────────
 async function handleRSS(request) {
-  const { url } = await request.json();
+  const { url, limit } = await request.json();
   if (!url) return json({ items: [], error: "Missing url" });
 
   let r;
@@ -270,7 +270,7 @@ async function handleRSS(request) {
   if (!r.ok) return json({ items: [], error: `Feed returned ${r.status}` });
 
   const xml = await r.text();
-  const items = parseFeed(xml).slice(0, 40);
+  const items = parseFeed(xml).slice(0, Math.min(limit || 40, 40));
   return json({ items });
 }
 
